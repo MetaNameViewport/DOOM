@@ -4,13 +4,15 @@ canvas.width = WIDTH;
 canvas.height = HEIGHT;
 ctx.font = `${Math.round(WIDTH / 26)}px Arial`;
 
-let player = new Controller(200, 200, 5);
+let player = new Controller(0, 0, 0, 2);
 
 setInterval(function() {
     if (player.vector[0] || player.vector[1]) player.move();
     Drawing.clear();
     Drawing.background();
     Drawing.world();
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, HALF_HEIGHT, WIDTH, 1)
     Drawing.draw_fps();
 }, FPS);
 
@@ -23,6 +25,10 @@ document.addEventListener('keydown', function(e) {
         player.a();
     } else if (e.key == 'd') {
         player.d();
+    } else if (e.key == 'ArrowUp') {
+        player.up();
+    } else if (e.key == 'ArrowDown') {
+        player.down();
     };
 })
 

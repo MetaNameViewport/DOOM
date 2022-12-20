@@ -7,6 +7,8 @@ function raycasting(xo, yo) {
         let sin_a = Math.sin(cur_angle);
         let cos_a = Math.cos(cur_angle);
         let depth = MAX_DEPTH;
+        let wall_height = METER_COEFF;
+        let rgb = [255, 255, 255];
 
         x = xo + depth * cos_a;
         y = yo + depth * sin_a;
@@ -20,7 +22,8 @@ function raycasting(xo, yo) {
                     let local_d = distance([xo, yo], belongs);
                     if (local_d < depth) {
                         depth = local_d;
-                        ctx.fillStyle = object.color;
+                        wall_height = object.height * METER_COEFF;
+                        rgb = object.color;
                     }
                 }
             }
@@ -28,11 +31,15 @@ function raycasting(xo, yo) {
 
         if (depth < MAX_DEPTH) {
             depth *= Math.cos(player.angle - cur_angle);
-            let proj_height = PROJ_COEFF / depth;
-                /*let c = 255 / (1 + depth * depth * 0.00002);
-                ctx.fillStyle = `rgb(${c}, ${Math.round(c/2)}, ${Math.round(c/3)})`;*/
-            ctx.fillRect(ray * SCALE, HALF_HEIGHT - Math.round(proj_height/2), SCALE, proj_height);
-            ctx.fill();
+            let proj_height = (DIST * wall_height) / depth;
+            let v = 0.5 * (DIST * METER_COEFF) / depth * player.camera_z;
+            let y0 = HALF_HEIGHT + (v - proj_height);
+            
+            let r = rgb[0] / (1 + depth * depth * 0.00002);
+            let g = rgb[1] / (1 + depth * depth * 0.00002);
+            let b = rgb[2] / (1 + depth * depth * 0.00002);
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`
+            ctx.fillRect(ray * SCALE, y0, SCALE, proj_height);
         }
 
         cur_angle += DELTA_ANGLE;

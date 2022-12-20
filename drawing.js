@@ -5,10 +5,8 @@ const Drawing = {
     },
 
     background: function() {
-        ctx.fillStyle = 'rgb(0, 186, 255)';
-        ctx.fillRect(0, 0, WIDTH, HALF_HEIGHT);
-        ctx.fillStyle = 'gray';
-        ctx.fillRect(0, HALF_HEIGHT, WIDTH, HEIGHT);
+        ctx.fillStyle = 'rgb(0, 0, 0)';
+        ctx.fillRect(0, 0, WIDTH, HEIGHT)
     },
 
     draw_fps: function() {

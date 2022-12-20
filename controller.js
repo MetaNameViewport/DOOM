@@ -1,9 +1,12 @@
-function Controller(x, y, speed) {
+function Controller(x, y, z, speed) {
     this.x = x;
     this.y = y;
+    this.z = z;
+
+    this.camera_z = this.z + 2;
 
     this.speed = speed;
-    this.vector = [0, 0];
+    this.vector = [0, 0, 0];
 
     this.angle = 0;
 }
@@ -29,10 +32,21 @@ Controller.prototype = {
         this.vector[1] = this.speed * Math.cos(this.angle);
     },
 
-    stop: function() {this.vector = [0, 0]},
+    up: function() {
+        this.z += 0.1;
+        this.camera_z += 0.1;
+    },
+
+    down: function() {
+        this.z -= 0.1;
+        this.camera_z -= 0.1;
+    },
+
+    stop: function() {this.vector = [0, 0, 0]},
 
     move: function() {
         this.x += this.vector[0];
         this.y += this.vector[1];
+        this.z += this.vector[2]
     },
 };

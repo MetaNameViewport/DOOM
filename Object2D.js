@@ -28,8 +28,9 @@ function Intersection(a1, b1, c1, a2, b2, c2) {
 	return [[dx / d], [dy / d]];
 }
 
-function Mesh(vertexes, color='red', closed=false, type='mesh') {
+function Mesh(vertexes, height, color='red', closed=false, type='mesh') {
     this.vertexes = vertexes;
+    this.height = height;
     this.color = color;
     this.closed = closed;
     this.type = type;
