@@ -1,7 +1,7 @@
 let WIDTH = document.body.clientWidth;
 let HEIGHT = (WIDTH / 16) * 9;
 let HALF_HEIGHT = HEIGHT / 2;
-let METER_COEFF = 50;
+let METER_COEFF = 25;
 
 let FOV = Math.PI / 3;
 let HALF_FOV = FOV / 2;
