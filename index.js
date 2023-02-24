@@ -17,59 +17,66 @@ let angle = 0;
 let fps = 60;
 
 
-function drawObject(obj, ribs) {
-	let diff = [], translated = [], disp = [];
+function drawObject(obj) {
 	let z_buffer = [];
+	for (let face of obj) {
+		let diff = [], translated = [], disp = [], face_distances = [];
+		let flag = false;
 
-	for (let v of obj) {
-		let x_diff = v[0] - x;
-		let y_diff = v[1] - y;
-		let z_diff = v[2] - z;
-		diff.push([x_diff, y_diff, z_diff]);
-	}
-
-	for (let i of diff) {
-		let translatedX = i[0] * Math.cos(-angle) + i[2] * Math.sin(-angle);
-		let translatedZ = i[2] * Math.cos(-angle) - i[0] * Math.sin(-angle);
-		if (translatedZ < 0) return;
-		translated.push([translatedX, translatedZ]);
-	}
-
-	for (let d in translated) {
-		let dispX = (translated[d][0] / translated[d][1]) * screenDistance + centerOfScreenX;
-		let dispY = centerOfScreenY - (diff[d][1] / translated[d][1]) * screenDistance;
-		let dist = translated[d][1];
-		disp.push([dispX, dispY, dist]);
-	}
-
-	for (let hz of ribs) {
-		let local = [];
-		local.push(disp[hz[0][0]]);
-
-		for (let num = 1; num < hz[0].length; num++) {
-			local.push(disp[hz[0][num]], hz[1]);
+		for (let v of face) {
+			let x_diff = v[0] - x;
+			let y_diff = -v[1] - y;
+			let z_diff = -v[2] - z;
+			diff.push([x_diff, y_diff, z_diff]);
 		}
 
-		z_buffer.push(local);
+		for (let v of diff) {
+			let translatedX = v[0] * Math.cos(-angle) + v[2] * Math.sin(-angle);
+			let translatedZ = v[2] * Math.cos(-angle) - v[0] * Math.sin(-angle);
+			
+			if (translatedZ < 0) {
+				flag = true;
+				continue;
+			};
+
+			translated.push([translatedX, translatedZ]);
+		}
+
+		if (flag) continue;
+		
+		for (let d in translated) {
+			let dispX = (translated[d][0] / translated[d][1]) * screenDistance + centerOfScreenX;
+			let dispY = (diff[d][1] / translated[d][1]) * screenDistance + centerOfScreenY;
+			let dist = translated[d][1];
+
+			face_distances.push(dist);
+			disp.push([dispX, dispY]);
+		}
+
+		let average_distance = face_distances.reduce((n, acc) => n + acc) / face_distances.length;
+
+		z_buffer.push([disp, average_distance]);
 	}
 
 	z_buffer = z_buffer.sort(function(a, b) {
-		return b[0][2] - a[0][2];
+		return b[1] - a[1];
 	})
 
+	ctx.fillStyle = 'black';
 	for (let faces of z_buffer) {
-		ctx.fillStyle = faces[2];
+		let vertexes = faces[0];
+		
 		ctx.beginPath();
-		ctx.moveTo(faces[0][0], faces[0][1]);
+		ctx.moveTo(vertexes[0][0], vertexes[0][1]);
 
-		for (let num = 1; num < faces.length; num++) {
-			ctx.lineTo(faces[num][0], faces[num][1]);
+		for (let num = 1; num < vertexes.length; num++) {
+			ctx.lineTo(vertexes[num][0], vertexes[num][1]);
 		}
 
 		ctx.closePath();
 		ctx.stroke();
-		ctx.fill();
 	}
+	
 }
 
 function clear() {
@@ -79,12 +86,12 @@ function clear() {
 
 function draw() {
 	clear()
-	drawObject(obj, ribs);
+	drawObject(obj);
 }
 
 function move() {
-	x += vector[0]
-	z += vector[2]
+	x += vector[0];
+	z += vector[2];
 }
 
 setInterval( function() {
