@@ -1,4 +1,6 @@
-obj_path = 'cube.obj'
+obj_path = '{}.obj'.format(input('Model name: '))
+map_path = 'map.js'
+
 
 ribs = []
 vertexes = []
@@ -36,4 +38,6 @@ for i in ribs:
         v_in_true_sequence.append(vertexes[f])
     faces.append(v_in_true_sequence)
 
-print('let faces = {}'.format(faces))
+map_file = open(map_path, 'w')
+map_file.write('let obj = {}'.format(faces))
+map_file.close()

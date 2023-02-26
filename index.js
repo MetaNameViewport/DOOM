@@ -1,7 +1,23 @@
+/** @type {WebGLRenderingContext} */
+
 let canvas = document.getElementById('canvas');
-let ctx = canvas.getContext('2d');
-canvas.width = document.body.clientWidth;
-canvas.height = canvas.width / 16 * 9;
+let gl = canvas.getContext('webgl');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+gl.viewport(0, 0, window.innerWidth, window.innerHeight);
+
+let vertexShaderSource = document.querySelector("#vertexShader").text;
+let fragmentShaderSource = document.querySelector("#fragmentShader").text;
+ 
+let vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+let program = createProgram(gl, vertexShader, fragmentShader);
+
+let aPosition = gl.getAttribLocation(program, "a_position");
+let uColor = gl.getUniformLocation(program, 'u_color')
+
+let positionBuffer = gl.createBuffer();
 
 let x = 400;
 let y = 0;
@@ -18,75 +34,24 @@ let fps = 60;
 
 
 function drawObject(obj) {
-	let z_buffer = [];
-	for (let face of obj) {
-		let diff = [], translated = [], disp = [], face_distances = [];
-		let flag = false;
+	let render_vertexes = translate(obj);
 
-		for (let v of face) {
-			let x_diff = v[0] - x;
-			let y_diff = -v[1] - y;
-			let z_diff = -v[2] - z;
-			diff.push([x_diff, y_diff, z_diff]);
-		}
+	gl.clearColor(1.0, 1.0, 1.0, 1.0);
+	gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.useProgram(program);
 
-		for (let v of diff) {
-			let translatedX = v[0] * Math.cos(-angle) + v[2] * Math.sin(-angle);
-			let translatedZ = v[2] * Math.cos(-angle) - v[0] * Math.sin(-angle);
-			
-			if (translatedZ < 0) {
-				flag = true;
-				continue;
-			};
+	let uResolution = gl.getUniformLocation(program, "u_resolution");
+    gl.uniform2f(uResolution, gl.canvas.width, gl.canvas.height);
+	gl.uniform4f(uColor, Math.random()/2, Math.random()/2, Math.random()/2, 1);
 
-			translated.push([translatedX, translatedZ]);
-		}
 
-		if (flag) continue;
-		
-		for (let d in translated) {
-			let dispX = (translated[d][0] / translated[d][1]) * screenDistance + centerOfScreenX;
-			let dispY = (diff[d][1] / translated[d][1]) * screenDistance + centerOfScreenY;
-			let dist = translated[d][1];
+    gl.enableVertexAttribArray(aPosition);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(render_vertexes), gl.STATIC_DRAW);
 
-			face_distances.push(dist);
-			disp.push([dispX, dispY]);
-		}
-
-		let average_distance = face_distances.reduce((n, acc) => n + acc) / face_distances.length;
-
-		z_buffer.push([disp, average_distance]);
-	}
-
-	z_buffer = z_buffer.sort(function(a, b) {
-		return b[1] - a[1];
-	})
-
-	ctx.fillStyle = 'black';
-	for (let faces of z_buffer) {
-		let vertexes = faces[0];
-		
-		ctx.beginPath();
-		ctx.moveTo(vertexes[0][0], vertexes[0][1]);
-
-		for (let num = 1; num < vertexes.length; num++) {
-			ctx.lineTo(vertexes[num][0], vertexes[num][1]);
-		}
-
-		ctx.closePath();
-		ctx.stroke();
-	}
+    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, render_vertexes.length);
 	
-}
-
-function clear() {
-	ctx.fillStyle = 'white';
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function draw() {
-	clear()
-	drawObject(obj);
 }
 
 function move() {
@@ -96,7 +61,7 @@ function move() {
 
 setInterval( function() {
 	move();
-	draw();
+	drawObject(obj);
 }, 1000 / fps);
 
 document.addEventListener("keydown", function(e) {
