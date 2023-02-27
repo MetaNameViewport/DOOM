@@ -39,5 +39,5 @@ for i in ribs:
     faces.append(v_in_true_sequence)
 
 map_file = open(map_path, 'w')
-map_file.write('let obj = {}'.format(faces))
+map_file.write('let obj = {}.flat().flat()'.format(faces))
 map_file.close()

@@ -1,7 +1,7 @@
 /** @type {WebGLRenderingContext} */
 
 let canvas = document.getElementById('canvas');
-let gl = canvas.getContext('webgl');
+gl = canvas.getContext('webgl');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
@@ -15,7 +15,8 @@ let fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
 let program = createProgram(gl, vertexShader, fragmentShader);
 
 let aPosition = gl.getAttribLocation(program, "a_position");
-let uColor = gl.getUniformLocation(program, 'u_color')
+let fAngle = gl.getUniformLocation(program, "angle");
+let uPosition = gl.getUniformLocation(program, "position");
 
 let positionBuffer = gl.createBuffer();
 
@@ -32,26 +33,28 @@ let centerOfScreenY = canvas.height / 2;
 let angle = 0;
 let fps = 60;
 
+let last_time = performance.now();
+
 
 function drawObject(obj) {
-	let render_vertexes = translate(obj);
-
 	gl.clearColor(1.0, 1.0, 1.0, 1.0);
-	gl.clear(gl.COLOR_BUFFER_BIT);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.enable(gl.DEPTH_TEST);
     gl.useProgram(program);
 
 	let uResolution = gl.getUniformLocation(program, "u_resolution");
+
+	gl.uniform1f(fAngle, angle);
     gl.uniform2f(uResolution, gl.canvas.width, gl.canvas.height);
-	gl.uniform4f(uColor, Math.random()/2, Math.random()/2, Math.random()/2, 1);
+	gl.uniform3f(uPosition, x, y, z)
 
 
     gl.enableVertexAttribArray(aPosition);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(render_vertexes), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(obj), gl.STATIC_DRAW);
 
-    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, render_vertexes.length);
-	
+    gl.vertexAttribPointer(aPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, obj.length);
 }
 
 function move() {
@@ -62,6 +65,11 @@ function move() {
 setInterval( function() {
 	move();
 	drawObject(obj);
+
+	let new_time = performance.now();
+	console.log(1000/(new_time - last_time));
+	last_time = new_time;
+
 }, 1000 / fps);
 
 document.addEventListener("keydown", function(e) {
