@@ -9,7 +9,12 @@ let vertex_shader = document.querySelector("#vertexShader").text;
 let fragment_shader = document.querySelector("#fragmentShader").text;
 
 let programInfo = twgl.createProgramInfo(gl, [vertex_shader, fragment_shader]);
-let bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
+
+let vertexBufferInfo = [];
+
+for (let model of arrays) {
+    vertexBufferInfo.push(twgl.createBufferInfoFromArrays(gl, model));
+}
 
 let cameraMatrix = mat4.create();
 let projection = mat4.create();
@@ -22,8 +27,6 @@ let screenTranslation = mat4.create();
 let cameraMatrixPosition = vec3.create();
 let tempStraightDirection = vec3.create();
 let tempSideDirection = vec3.create();
-
-let key = {};
 
 mat4.perspective(projection, FOV, ASPECT, NearPlane, FarPlane);
 
@@ -56,17 +59,19 @@ function render() {
     mat4.invert(view, cameraMatrix);
     mat4.multiply(viewProjection, projection, view);
     mat4.multiply(screenTranslation, viewProjection, vertexMatrix);
-        
-    twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-    twgl.setUniforms(programInfo, {
-        u_screenTranslation: screenTranslation,
-        u_color: [0, 0, 0, 1.0],
-    });
+    
+    for (let model of vertexBufferInfo) {
+        twgl.setBuffersAndAttributes(gl, programInfo, model);
+        twgl.setUniforms(programInfo, {
+            u_screenTranslation: screenTranslation,
+            u_color: [0.2, 0.8, 0.4, 1.0],
+        });
 
-    twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLES);
+        twgl.drawBufferInfo(gl, model, gl.TRIANGLES);
+    }      
 }
 
-setInterval(render, 1000 / FPS)
+setInterval(render, 1000 / FPS);
 
 window.addEventListener('keydown', (e) => key[e.key] = true);
 window.addEventListener('keyup', (e) => key[e.key] = false);

@@ -1,35 +1,56 @@
-objPath = '{}.obj'.format(input('Model name: '))
-mtlPath = objPath.split('.')
-mtlPath[1] = 'mtl'
-mtlPath = '.'.join(mtlPath)
+objectName = input('Enter obj file name: ')
 
-map_path = 'map.js'
-ribs = list()
+objectsFile = open('models/' + objectName + '.obj', 'r')
+objects = objectsFile.readlines()
+objectsFile.close()
+
+markers = list()
+models = list()
+scene = list()
 vertices = list()
-faces = list()
-webglVerticesArray = list()
 
-obj = open(objPath, 'r')
-
-for line in obj:
+for line in objects:
     if line[0] == 'v' and line[1] != 't' and line[1] != 'n':
-        _vertexes = line[2:len(line) - 1].split(' ')
-        vertices.append([float(_vertexes[0]),
-                         float(_vertexes[1]),
-                         float(_vertexes[2]) ])
+        _vertices = line[2:len(line) - 1].split(' ')
+        vertices.append([float(_vertices[0]),
+                          float(_vertices[1]),
+                          float(_vertices[2])])
 
-    elif line[0] == 'f':
-        _face = line[2:len(line) - 1].split(' ')
-        for faceId in _face:
-            faces.append(int(faceId.split('/')[0]))
 
-obj.close()
+def parse(obj):
+    faces = list()
+    webglVerticesArray = list()
 
-for faceId in faces:
-    for i in range(3):
-        webglVerticesArray.append(vertices[faceId - 1][i])
+    for line in obj:
+        if line[0] == 'f':
+            _face = line[2:len(line) - 1].split(' ')
+            for faceId in _face:
+                faces.append(int(faceId.split('/')[0]))
 
-map_file = open(map_path, 'w')
-map_file.write('let arrays = ' + '{\nposition: ' + 'new Float32Array({})\n'.format(webglVerticesArray) + '}')
-map_file.close()
+    for faceId in faces:
+        for _i in range(3):
+            webglVerticesArray.append(vertices[faceId - 1][_i])
 
+    return webglVerticesArray
+
+
+for i in range(len(objects)):
+    if objects[i][0] == 'o':
+        markers.append(i)
+
+markers.append(len(objects))
+
+for i in range(len(markers) - 1):
+    models.append(objects[markers[i]+1:markers[i+1]])
+
+for model in models:
+    scene.append(parse(model))
+
+mapFile = open('map.js', 'w')
+mapFile.write('let arrays = [\n')
+
+for i in range(len(scene)):
+    mapFile.write('{position: ' + 'new Float32Array({})'.format(scene[i]) + '},\n')
+
+mapFile.write('\n]')
+mapFile.close()
